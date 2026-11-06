@@ -1,0 +1,37 @@
+name: Bug report
+description: Something on the card or integration is wrong or missing.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to report this. Please remove serial numbers, addresses and API keys from anything you paste.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      placeholder: e.g. NAS Bays 0.3.3, TrueNAS 25.10.1, Home Assistant 2026.10.4
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Your card YAML
+      render: yaml
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot of the card
+      description: Drag an image in here.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Home Assistant log lines
+      description: Settings → System → Logs, search for nas_bays.
+      render: text
