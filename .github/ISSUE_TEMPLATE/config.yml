@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Step-by-step guide
+    url: https://mymediabuild.uk/home-assistant-truenas-card/
+    about: Setup steps, every option and troubleshooting.
+  - name: A card designed for your own server
+    url: https://mymediabuild.uk/custom-home-assistant-cards/
+    about: Your case layout and extra detail, built to order.
