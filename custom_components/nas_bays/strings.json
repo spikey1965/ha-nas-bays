@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to TrueNAS",
+        "description": "Use an API key from a read-only account (Credentials → Users, in the Read-Only Administrator group). TrueNAS 25.10 or newer. HTTPS only: TrueNAS revokes API keys sent over plain HTTP.",
+        "data": {
+          "host": "Address of the NAS",
+          "port": "HTTPS port",
+          "api_key": "API key",
+          "verify_ssl": "Check the HTTPS certificate (untick for TrueNAS's default self-signed one)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "New API key needed",
+        "description": "TrueNAS refused the saved key. Paste a new one.",
+        "data": { "api_key": "API key" }
+      }
+    },
+    "error": {
+      "cannot_connect": "Can't reach the NAS. Check the address and HTTPS port.",
+      "invalid_auth": "TrueNAS refused that API key.",
+      "ssl_error": "The certificate couldn't be verified. If you use TrueNAS's self-signed certificate, untick the certificate check.",
+      "https_only": "Use the address without http://. API keys must only be sent over HTTPS."
+    },
+    "abort": {
+      "already_configured": "This NAS is already added.",
+      "reauth_successful": "Key updated."
+    }
+  }
+}
