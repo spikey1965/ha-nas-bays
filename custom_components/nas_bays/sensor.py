@@ -29,8 +29,9 @@ class Metric:
 GIB = UnitOfInformation.GIBIBYTES
 METRICS = [
     Metric("health", "Health", state_class=None, device_class=SensorDeviceClass.ENUM, icon="mdi:server",
-           attrs=lambda s: {k: s[k] for k in ("summary", "hostname", "version", "model", "memory_total", "net_speed", "interfaces")}),
-    Metric("cpu_usage", "CPU usage", PERCENTAGE, icon="mdi:cpu-64-bit"),
+           attrs=lambda s: {k: s[k] for k in ("summary", "summary_key", "summary_n", "summary_pool", "summary_status", "hostname", "version", "model", "memory_total", "net_speed", "interfaces")}),
+    Metric("cpu_usage", "CPU usage", PERCENTAGE, icon="mdi:cpu-64-bit",
+           attrs=lambda s: {k: s[k] for k in ("cpu_cores", "cpu_thread_count", "cpu_threads")}),
     Metric("cpu_temperature", "CPU temperature", UnitOfTemperature.CELSIUS, SensorDeviceClass.TEMPERATURE),
     Metric("load", "Load", icon="mdi:gauge"),
     Metric("memory_apps", "Memory used by apps and system", GIB, SensorDeviceClass.DATA_SIZE),
@@ -74,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities: AddE
 
 class Base(CoordinatorEntity, SensorEntity):
     _attr_has_entity_name = True
-    _unrecorded_attributes = frozenset({"alert_list", "backup", "interfaces", "issues", "nas_bays_role", "nas_bays_entry"})
+    _unrecorded_attributes = frozenset({"alert_list", "backup", "cpu_threads", "interfaces", "issues", "nas_bays_role", "nas_bays_entry"})
 
     def __init__(self, coordinator, entry) -> None:
         super().__init__(coordinator)
@@ -175,5 +176,5 @@ class PoolSensor(Base):
     @property
     def extra_state_attributes(self):
         p = self._pool
-        keys = ("name", "status", "healthy", "used", "available", "total", "layout", "scrub_state", "scrub_end", "scrub_errors", "disks_total", "disks_with_errors")
+        keys = ("name", "status", "healthy", "used", "available", "total", "layout", "scrub_state", "scrub_end", "scrub_errors", "scan_function", "disks_total", "disks_with_errors", "data_vdevs", "caches", "spares")
         return {"nas_bays_role": "pool", "nas_bays_entry": self._entry.entry_id, **{k: p[k] for k in keys}}

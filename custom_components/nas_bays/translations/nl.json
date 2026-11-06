@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Verbinden met TrueNAS",
+        "description": "Gebruik een API-sleutel van een alleen-lezen account (Credentials → Users, rol Readonly Admin). TrueNAS 25.10 of nieuwer. Alleen HTTPS: TrueNAS trekt API-sleutels in die via gewone HTTP worden verzonden.",
+        "data": {
+          "host": "Adres van de NAS",
+          "port": "HTTPS-poort",
+          "api_key": "API-sleutel",
+          "verify_ssl": "HTTPS-certificaat controleren (uitvinken voor het standaard zelfondertekende certificaat van TrueNAS)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Nieuwe API-sleutel nodig",
+        "description": "TrueNAS heeft de opgeslagen sleutel geweigerd. Plak een nieuwe.",
+        "data": {
+          "api_key": "API-sleutel"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "De NAS is niet bereikbaar. Controleer het adres en de HTTPS-poort.",
+      "invalid_auth": "TrueNAS heeft die API-sleutel geweigerd.",
+      "ssl_error": "Het certificaat kon niet worden gecontroleerd. Gebruik je het zelfondertekende certificaat van TrueNAS, vink de controle dan uit.",
+      "https_only": "Gebruik het adres zonder http://. API-sleutels mogen alleen via HTTPS worden verzonden."
+    },
+    "abort": {
+      "already_configured": "Deze NAS is al toegevoegd.",
+      "reauth_successful": "Sleutel bijgewerkt."
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ligar ao TrueNAS",
+        "description": "Use uma chave API de uma conta só de leitura (Credentials → Users, função Readonly Admin). TrueNAS 25.10 ou mais recente. Só HTTPS: o TrueNAS revoga chaves API enviadas por HTTP simples.",
+        "data": {
+          "host": "Endereço do NAS",
+          "port": "Porta HTTPS",
+          "api_key": "Chave API",
+          "verify_ssl": "Verificar o certificado HTTPS (desmarque para o certificado autoassinado predefinido do TrueNAS)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "É necessária uma nova chave API",
+        "description": "O TrueNAS recusou a chave guardada. Cole uma nova.",
+        "data": {
+          "api_key": "Chave API"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Não é possível ligar ao NAS. Verifique o endereço e a porta HTTPS.",
+      "invalid_auth": "O TrueNAS recusou essa chave API.",
+      "ssl_error": "Não foi possível verificar o certificado. Se usa o certificado autoassinado do TrueNAS, desmarque a verificação.",
+      "https_only": "Use o endereço sem http://. As chaves API só devem ser enviadas por HTTPS."
+    },
+    "abort": {
+      "already_configured": "Este NAS já foi adicionado.",
+      "reauth_successful": "Chave atualizada."
+    }
+  }
+}

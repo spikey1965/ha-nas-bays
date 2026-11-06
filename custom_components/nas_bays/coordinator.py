@@ -31,11 +31,19 @@ def parse_time(value: Any) -> datetime | None:
 
 
 def interface_list(query: list[dict] | None, live: dict[str, dict]) -> list[dict]:
-    """Network ports and whether each has a link, ports with a link first."""
-    nics = [
-        {"name": nic.get("name"), "link": (live.get(nic.get("name")) or {}).get("link_state") or (nic.get("state") or {}).get("link_state")}
-        for nic in query or []
-    ]
+    """Network ports, ports with a link first. The basic card reads name and link; custom designs use the rest."""
+    nics = []
+    for nic in query or []:
+        state = nic.get("state") or {}
+        addresses = [a for a in state.get("aliases") or [] if a.get("type") in ("INET", "INET6")]
+        nics.append({
+            "name": nic.get("name"),
+            "link": (live.get(nic.get("name")) or {}).get("link_state") or state.get("link_state"),
+            "media_type": state.get("active_media_type"),
+            "media_subtype": state.get("active_media_subtype"),
+            "ip": f"{addresses[0]['address']}/{addresses[0]['netmask']}" if addresses else None,
+            "ip_more": max(len(addresses) - 1, 0),
+        })
     return sorted(nics, key=lambda n: n["link"] != "LINK_STATE_UP")
 
 
@@ -61,6 +69,15 @@ def layout_text(pool: dict) -> str:
         return "Single disk" if disks == 1 else f"Stripe, {disks} disks"
     vdevs = f"{len(data)} × " if len(data) > 1 else ""
     return f"{vdevs}{kind}, {disks} disks"
+
+
+def thread_list(cpu: dict) -> list[dict]:
+    """Usage and temperature per CPU thread, for custom designs. Whole numbers, as TrueNAS shows them."""
+    rows = []
+    while (row := cpu.get(f"cpu{len(rows)}")) is not None:
+        usage, temp = row.get("usage"), row.get("temp")
+        rows.append({"usage": int(usage) if usage is not None else None, "temp": int(temp) if temp is not None else None})
+    return rows
 
 
 def backup_summary(raw: dict) -> dict:
@@ -150,6 +167,7 @@ def build_model(raw: dict, realtime: dict) -> dict:
         used = live.get("used") if live else pool.get("allocated")
         ended = parse_time(scan.get("end_time"))
         members = pool_leaves(pool)
+        topology = pool.get("topology") or {}
         pools[name] = {
             "name": name,
             "status": pool.get("status"),
@@ -162,6 +180,10 @@ def build_model(raw: dict, realtime: dict) -> dict:
             "scrub_state": scan.get("state"),
             "scrub_end": ended.isoformat() if ended else None,
             "scrub_errors": scan.get("errors"),
+            "scan_function": scan.get("function"),
+            "data_vdevs": len(topology.get("data") or []),
+            "caches": len(topology.get("cache") or []),
+            "spares": len(topology.get("spare") or []),
             "disks_total": len(members),
             "disks_with_errors": sum(1 for leaf in members if any((leaf.get("stats") or {}).get(k) for k in ("read_errors", "write_errors", "checksum_errors"))),
         }
@@ -178,16 +200,19 @@ def build_model(raw: dict, realtime: dict) -> dict:
     bad_pools = [p["name"] for p in pools.values() if not p["healthy"]]
     bad_disks = [d for d in disks.values() if d["health"] != "ok"]
     other_alerts = [a for a in alerts if a.get("level") != "INFO"]
+    summary_key, summary_n, summary_pool, summary_status = "all_good", None, None, None
     if bad_pools:
-        health, summary = "critical", f"{bad_pools[0]} {(pools[bad_pools[0]]['status'] or 'unhealthy').lower()}"
-    elif any(d["health"] == "critical" for d in bad_disks):
-        health, summary = "critical", f"{len(bad_disks)} disk{'s' if len(bad_disks) != 1 else ''} need{'' if len(bad_disks) != 1 else 's'} attention"
+        health, summary_key = "critical", "pool_status"
+        summary_pool, summary_status = bad_pools[0], pools[bad_pools[0]]["status"]
+        summary = f"{summary_pool} {(summary_status or 'unhealthy').lower()}"
     elif bad_disks:
-        health, summary = "warning", f"{len(bad_disks)} disk{'s' if len(bad_disks) != 1 else ''} need{'' if len(bad_disks) != 1 else 's'} attention"
-    elif any(a.get("level") in BAD_LEVELS for a in other_alerts):
-        health, summary = "critical", f"{len(other_alerts)} alert{'s' if len(other_alerts) != 1 else ''}"
+        health = "critical" if any(d["health"] == "critical" for d in bad_disks) else "warning"
+        summary_key, summary_n = "disks_attention", len(bad_disks)
+        summary = f"{summary_n} disk{'s' if summary_n != 1 else ''} need{'' if summary_n != 1 else 's'} attention"
     elif other_alerts:
-        health, summary = "warning", f"{len(other_alerts)} alert{'s' if len(other_alerts) != 1 else ''}"
+        health = "critical" if any(a.get("level") in BAD_LEVELS for a in other_alerts) else "warning"
+        summary_key, summary_n = "alerts_n", len(other_alerts)
+        summary = f"{summary_n} alert{'s' if summary_n != 1 else ''}"
     else:
         health, summary = "ok", "All good"
 
@@ -195,6 +220,10 @@ def build_model(raw: dict, realtime: dict) -> dict:
     system = {
         "health": health,
         "summary": summary,
+        "summary_key": summary_key,
+        "summary_n": summary_n,
+        "summary_pool": summary_pool,
+        "summary_status": summary_status,
         "hostname": info.get("hostname"),
         "version": info.get("version"),
         "model": info.get("model"),
@@ -202,6 +231,9 @@ def build_model(raw: dict, realtime: dict) -> dict:
         "load": (info.get("loadavg") or [None])[0],
         "cpu_usage": cpu.get("usage"),
         "cpu_temperature": cpu.get("temp"),
+        "cpu_cores": info.get("physical_cores"),
+        "cpu_thread_count": info.get("cores"),
+        "cpu_threads": thread_list(realtime.get("cpu") or {}),
         "memory_total": round(total / GIB, 1) if total else None,
         "memory_apps": round(max(total - free - arc, 0) / GIB, 1) if total and free is not None else None,
         "memory_cache": round(arc / GIB, 1) if total else None,

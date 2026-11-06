@@ -4,14 +4,15 @@ A simple Home Assistant card for your TrueNAS server: your drives across the top
 
 ![The NAS Bays card with 12 drive bays, CPU, memory, network, VPN, backups and two pools](images/card.png)
 
-> **Beta (0.3.3).** It runs every day on my own server with TrueNAS 27 RC.1 and Home Assistant 2026.10. It needs TrueNAS 25.10 or newer, but I haven't tried those earlier versions. If you do, please [open an issue](https://github.com/spikey1965/ha-nas-bays/issues) with what works and what doesn't.
+> **Beta (0.4.0).** It runs every day on my own server with TrueNAS 27 RC.1 and Home Assistant 2026.10. It needs TrueNAS 25.10 or newer, but I haven't tried those earlier versions. If you do, please [open an issue](https://github.com/spikey1965/ha-nas-bays/issues) with what works and what doesn't.
 
 ## What it shows
 
 - **Drives:** up to 12 bays across the top with health, temperature, size and the end of the serial. Tap one for its details.
 - **CPU, memory and network:** the current figures and simple bars.
 - **Pools:** status, how full, free space and the last scrub. It warns when a pool fills up or a scrub is overdue.
-- **Backups:** the last snapshot, and whether replication, cloud or rsync tasks are set up and working.
+- **Backups:** the last snapshot, and whether replication, cloud or rsync tasks are set up and working. The line only appears if you have backup tasks.
+- **8 languages:** English, Deutsch, Français, Italiano, Español, Nederlands, Polski and Português. It follows Home Assistant's language, or you can pick one.
 - **VPN (optional):** one line saying whether your VPN is connected.
 
 ## Install
@@ -56,6 +57,7 @@ Everything in the card's visual editor can also be set in YAML.
 | --- | --- | --- |
 | `mode` | `full` | `compact` gives a small summary card |
 | `theme` | `auto` | `light` for dark text, `dark` for white text |
+| `language` | Home Assistant's | `en`, `de`, `fr`, `it`, `es`, `nl`, `pl` or `pt` |
 | `name` | NAS's hostname | The title on the card |
 | `bays` | `12` | How many bays to show |
 | `slots` | automatic | Drive serials in bay order, using `null` for an empty bay |
@@ -67,7 +69,7 @@ Everything in the card's visual editor can also be set in YAML.
 | `temp_warn` | `50` | Drive temperature, in °C, shown in amber |
 | `scrub_warn_days` | `45` | Days since the last scrub before it's marked overdue |
 | `snapshot_warn_hours` | `48` | Hours since the last snapshot before Backups warns |
-| `warn_no_replication` | `false` | Warn when there's no replication, cloud or rsync task |
+| `warn_no_replication` | `false` | Warn when there's no replication, cloud or rsync task. This also keeps the Backups line showing when nothing is set up |
 | `vpn_entity` | none | A sensor for the VPN line (see below) |
 | `vpn_label` | none | The text on the VPN line, such as `Surfshark OpenVPN` |
 | `background` | theme | A card background colour |
@@ -92,10 +94,13 @@ Then set `vpn_entity: sensor.nas_vpn` on the card. The token file holds a Home A
 
 This card stays simple on purpose. If you'd like it to match your actual case, with extra detail such as gauges, charts and per-core CPU, I can [design one for your own server](https://mymediabuild.uk/custom-home-assistant-cards/).
 
+![An example custom design with a case layout, a CPU gauge with per-thread bars, a memory chart and a network graph](images/custom-example.png)
+
 ## Good to know
 
 - Figures update every 30 seconds, so it isn't live to the second.
 - Network speeds add up all ports that have a link.
+- The translations are machine-made, and messages from TrueNAS itself stay in English. Spotted a wrong word? Please [open an issue](https://github.com/spikey1965/ha-nas-bays/issues).
 - TrueNAS is a trademark of its owner. This project isn't connected to or endorsed by iXsystems.
 
 Guide: [mymediabuild.uk](https://mymediabuild.uk/home-assistant-truenas-card/) · [Report a problem](https://github.com/spikey1965/ha-nas-bays/issues) · [Buy me a coffee](https://buymeacoffee.com/bobgreggr)
