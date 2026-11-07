@@ -94,7 +94,7 @@ Then set `vpn_entity: sensor.nas_vpn` on the card. The token file holds a Home A
 
 This card stays simple on purpose. If you'd like it to match your actual case, with extra detail such as gauges, charts and per-core CPU, I can [design one for your own server](https://mymediabuild.uk/custom-home-assistant-cards/).
 
-![An example custom design with a case layout, a CPU gauge with per-thread bars, a memory chart and a network graph](images/custom-example.png)
+![An example custom design with 12 vertical bays, open empty bays, drive hours, a CPU gauge with per-thread bars, a memory chart, a network graph and a VPN radar](images/custom-example.png)
 
 ## Good to know
 
