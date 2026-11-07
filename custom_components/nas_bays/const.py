@@ -1,6 +1,6 @@
 """Constants for NAS Bays."""
 DOMAIN = "nas_bays"
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 CARD_URL = f"/{DOMAIN}/nas-bays-card.js"
 CONF_VERIFY_SSL = "verify_ssl"
 DEFAULT_PORT = 443

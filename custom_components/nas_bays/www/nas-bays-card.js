@@ -1,6 +1,6 @@
 /* NAS Bays card for Home Assistant. Read-only: nothing on this card can change the NAS. MIT licence. */
 (() => {
-const VERSION = "0.4.0";
+const VERSION = "0.4.1";
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
 const fmt = (v, d = 1) => (v == null ? "–" : (+v).toFixed(d));
@@ -26,6 +26,8 @@ const t = (key, vars = {}) => {
   if (typeof v === "object") v = v[new Intl.PluralRules(LANG).select(vars.n ?? 0)] ?? v.other;
   return v.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "");
 };
+/* An empty bay: the flap swung open, so you can see the rails and connector inside. */
+const EMPTY_BAY = '<svg class="ebay" viewBox="0 0 100 250" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="nbF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b424b"/><stop offset="1" stop-color="#1b1f24"/></linearGradient><linearGradient id="nbL" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#23272d"/><stop offset="1" stop-color="#07080a"/></linearGradient><linearGradient id="nbR" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#1c2025"/><stop offset="1" stop-color="#07080a"/></linearGradient><linearGradient id="nbT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14171b"/><stop offset="1" stop-color="#050607"/></linearGradient><linearGradient id="nbB" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#2a2f35"/><stop offset="1" stop-color="#08090b"/></linearGradient><linearGradient id="nbH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a525c"/><stop offset=".22" stop-color="#2e343b"/><stop offset="1" stop-color="#14171b"/></linearGradient></defs><rect x=".5" y=".5" width="99" height="249" rx="4" fill="url(#nbF)" stroke="#000"/><rect x="5" y="5" width="90" height="240" rx="2" fill="#050607"/><path d="M5 5 L28 32 V172 L5 245 Z" fill="url(#nbL)"/><path d="M95 5 L72 32 V172 L95 245 Z" fill="url(#nbR)"/><path d="M5 5 H95 L72 32 H28 Z" fill="url(#nbT)"/><path d="M5 245 H95 L72 172 H28 Z" fill="url(#nbB)"/><rect x="28" y="32" width="44" height="140" fill="#0d2019"/><path d="M33 40 H67 M33 48 H52 M60 150 V164 M36 150 V164" stroke="#1f4a39" stroke-width="1" fill="none"/><rect x="45" y="62" width="10" height="66" rx="1" fill="#16181b" stroke="#454b52" stroke-width=".7"/><rect x="48.5" y="66" width="3" height="42" fill="#b89a4a"/><rect x="48.5" y="111" width="3" height="13" fill="#b89a4a"/><path d="M5 58 L28 72 M5 62 L28 75 M95 58 L72 72 M95 62 L72 75 M5 170 L28 140 M5 174 L28 143 M95 170 L72 140 M95 174 L72 143" stroke="#59616b" stroke-width="1.100" fill="none"/><path d="M1.5 141.3 L98.5 141.3 L85.4 234.0 L14.6 234.0 Z" fill="#000" opacity=".45" transform="translate(0 7)"/><path d="M2.0 126.0 L98.0 126.0 L84.0 234.0 L16.0 234.0 Z M19.9 161.5 L80.1 161.5 L78.8 175.7 L21.2 175.7 Z M21.4 178.0 L78.6 178.0 L77.4 191.4 L22.6 191.4 Z M22.8 193.6 L77.2 193.6 L75.9 206.4 L24.1 206.4 Z M24.3 208.6 L75.7 208.6 L74.5 221.0 L25.5 221.0 Z" fill="url(#nbH)" fill-rule="evenodd" stroke="#050607" stroke-width=".8"/><path d="M2.0 126.0 L98.0 126.0" stroke="#7d8792" stroke-width="1.300"/><path d="M21.6 134.5 L78.4 134.5 L77.1 153.5 L22.9 153.5 Z" fill="#0c0e11" stroke="#7d8792" stroke-width=".6"/><rect x="14" y="232" width="72" height="15" rx="1.500" fill="#1a1d21" stroke="#000" stroke-width=".6"/><rect x="26" y="235.500" width="48" height="3" fill="#2e8fd6"/><rect x="42" y="241" width="16" height="4" rx="1" fill="#0b0d0f"/></svg>';
 const WARN_ICON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 2.5 20h19L12 4Z"/></svg>';
 
 /* Everything the card shows comes from the integration's sensors. */
@@ -226,7 +228,10 @@ button:focus-visible { outline: 2px solid var(--nb-fg); outline-offset: 2px; }
 .nrate span:last-child { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 600; }
 ha-card { container-type: inline-size; width: 100%; max-width: var(--nb-max, none); margin-inline: auto; }
 .cage.std .slots { grid-template-columns: repeat(var(--c, 12), minmax(0, 1fr)); gap: 5px; }
-.cage.std .bay, .cage.std .empty { height: 104px; } .cage.std .bay { padding: 6px 2px; justify-content: flex-start; gap: 4px; } .cage.std .bay .mono { margin-top: auto; } .cage.std .empty { padding-bottom: 6px; font-size: 11px; } .cage.std .tag { font-size: 11px; } .cage.std .t { font-size: 15px; } .cage.std .sz { font-size: 11px; }
+.cage.std .bay, .cage.std .empty { height: 130px; } .cage.std .bay { padding: 6px 2px; justify-content: flex-start; gap: 4px; } .cage.std .bay .mono { margin-top: auto; } .cage.std .empty { padding-bottom: 6px; font-size: 11px; } .cage.std .tag { font-size: 11px; } .cage.std .t { font-size: 15px; } .cage.std .sz { font-size: 11px; }
+.cage.std .empty { position: relative; padding: 0; border: 0; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,.5); }
+.ebay { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.elabel { position: absolute; left: 0; right: 0; top: calc(57.6% - 6px); text-align: center; font-size: 10px; line-height: 1.1; color: #c7ced6; }
 @container (max-width: 560px) { .cage.std .slots { grid-template-columns: repeat(6, minmax(0, 1fr)); } .cage.std .empty { display: none; } }
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } .stats b { display: block; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 18px; }
 
@@ -310,7 +315,7 @@ class NasBaysCard extends HTMLElement {
   }
 
   _bay(serial, m, orient) {
-    if (!serial) return `<div class="empty">${esc(t("empty"))}</div>`;
+    if (!serial) return this._std ? `<div class="empty">${EMPTY_BAY}<span class="elabel">${esc(t("empty"))}</span></div>` : `<div class="empty">${esc(t("empty"))}</div>`;
     const d = m.disks[serial], sel = this._current === serial ? " sel" : "";
     if (!d) {
       const off = m.offline;

@@ -4,7 +4,7 @@ A simple Home Assistant card for your TrueNAS server: your drives across the top
 
 ![The NAS Bays card with 12 drive bays, CPU, memory, network, VPN, backups and two pools](images/card.png)
 
-> **Beta (0.4.0).** It runs every day on my own server with TrueNAS 27 RC.1 and Home Assistant 2026.10. It needs TrueNAS 25.10 or newer, but I haven't tried those earlier versions. If you do, please [open an issue](https://github.com/spikey1965/ha-nas-bays/issues) with what works and what doesn't.
+> **Beta (0.4.1).** It runs every day on my own server with TrueNAS 27 RC.1 and Home Assistant 2026.10. It needs TrueNAS 25.10 or newer, but I haven't tried those earlier versions. If you do, please [open an issue](https://github.com/spikey1965/ha-nas-bays/issues) with what works and what doesn't.
 
 ## What it shows
 
