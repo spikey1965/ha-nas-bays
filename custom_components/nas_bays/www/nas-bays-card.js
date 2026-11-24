@@ -1,6 +1,6 @@
 /* NAS Bays card for Home Assistant. Read-only: nothing on this card can change the NAS. MIT licence. */
 (() => {
-const VERSION = "0.4.1";
+const VERSION = "0.4.2";
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
 const fmt = (v, d = 1) => (v == null ? "–" : (+v).toFixed(d));

@@ -37,6 +37,7 @@ class TrueNASClient:
         self._reader: asyncio.Task | None = None
         self._ids = count(1)
         self._pending: dict[int, asyncio.Future] = {}
+        self._methods: dict[int, str] = {}  # so an error says which read failed
         self.realtime: dict[str, Any] = {}
         self._first_event = asyncio.Event()
 
@@ -89,6 +90,7 @@ class TrueNASClient:
         req = next(self._ids)
         fut: asyncio.Future = asyncio.get_running_loop().create_future()
         self._pending[req] = fut
+        self._methods[req] = method
         try:
             await self._ws.send_str(json.dumps({"jsonrpc": "2.0", "id": req, "method": method, "params": list(params)}))
             return await asyncio.wait_for(fut, TIMEOUT)
@@ -96,6 +98,7 @@ class TrueNASClient:
             raise TrueNASError(f"{method}: {err!r}") from err
         finally:
             self._pending.pop(req, None)
+            self._methods.pop(req, None)
 
     async def _read(self) -> None:
         try:
@@ -109,7 +112,7 @@ class TrueNASClient:
                     if fut and not fut.done():
                         if "error" in data:
                             err = data["error"]
-                            fut.set_exception(TrueNASError(f"{err.get('message')}: {(err.get('data') or {}).get('reason', '')}"))
+                            fut.set_exception(TrueNASError(f"{self._methods.get(req, '?')}: {err.get('message')}: {(err.get('data') or {}).get('reason', '')}"))
                         else:
                             fut.set_result(data.get("result"))
                 elif data.get("method") == "collection_update":

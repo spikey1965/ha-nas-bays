@@ -246,7 +246,7 @@ def build_model(raw: dict, realtime: dict) -> dict:
         "alert_list": [{"level": a.get("level"), "text": a.get("formatted")} for a in alerts],
         "apps_running": sum(1 for a in apps if a.get("state") == "RUNNING"),
         "apps_total": len(apps),
-        "snapshots": sum((raw.get("snapshots") or {}).values()),
+        "snapshots": sum(raw["snapshots"].values()) if raw.get("snapshots") is not None else None,
         "replication_tasks": len(raw.get("replication") or []),
         "backup": backup_summary(raw),
     }
@@ -288,7 +288,7 @@ class NasBaysCoordinator(DataUpdateCoordinator[dict]):
                     "temps": call("disk.temperatures"),
                     "apps": call("app.query"),
                     "replication": call("replication.query"),
-                    "snapshots": call("zfs.resource.snapshot.count", {"recursive": True}),
+                    "snapshots": optional(call("zfs.resource.snapshot.count", {"recursive": True})),  # not in TrueNAS 25.10
                     "boot": call("boot.get_state"),
                     "interfaces": optional(call("interface.query")),
                     "snapshot_tasks": optional(call("pool.snapshottask.query")),
