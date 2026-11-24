@@ -30,18 +30,26 @@ def parse_time(value: Any) -> datetime | None:
     return None
 
 
+def mbits(rate: float | None) -> float | None:
+    """Bytes per second to Mb/s."""
+    return round(rate * 8 / 1e6, 3) if rate is not None else None
+
+
 def interface_list(query: list[dict] | None, live: dict[str, dict]) -> list[dict]:
     """Network ports, ports with a link first. The basic card reads name and link; custom designs use the rest."""
     nics = []
     for nic in query or []:
         state = nic.get("state") or {}
+        traffic = live.get(nic.get("name")) or {}
         addresses = [a for a in state.get("aliases") or [] if a.get("type") in ("INET", "INET6")]
         nics.append({
             "name": nic.get("name"),
             "type": nic.get("type"),
             # set up in TrueNAS: an unplugged spare port isn't worth a warning
             "configured": bool(addresses or nic.get("aliases") or nic.get("ipv4_dhcp") or nic.get("ipv6_auto")),
-            "link": (live.get(nic.get("name")) or {}).get("link_state") or state.get("link_state"),
+            "down": mbits(traffic.get("received_bytes_rate")),
+            "up": mbits(traffic.get("sent_bytes_rate")),
+            "link": traffic.get("link_state") or state.get("link_state"),
             "media_type": state.get("active_media_type"),
             "media_subtype": state.get("active_media_subtype"),
             "ip": f"{addresses[0]['address']}/{addresses[0]['netmask']}" if addresses else None,

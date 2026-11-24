@@ -1,6 +1,6 @@
 /* NAS Bays card for Home Assistant. Read-only: nothing on this card can change the NAS. MIT licence. */
 (() => {
-const VERSION = "0.4.4";
+const VERSION = "0.4.5";
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
 const fmt = (v, d = 1) => (v == null ? "–" : (+v).toFixed(d));
@@ -59,7 +59,7 @@ function portList(nics) {
   if (ports.length < 2) return "";
   return `<div class="ports">${ports.sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, { numeric: true })).map((n) => {
     const up = n.link === "LINK_STATE_UP", mb = +(/^(\d+)\s*Mb/.exec(n.media_subtype || "") || [])[1];
-    return up ? `<div class="small port"><span class="led"></span>${esc(n.name)}${mb ? ` · ${mb >= 1000 ? `${mb / 1000} Gb/s` : `${mb} Mb/s`}` : ""}</div>`
+    return up ? `<div class="small port"><span class="led"></span>${esc(n.name)}${mb ? ` · ${mb >= 1000 ? `${mb / 1000} Gb/s` : `${mb} Mb/s`}` : ""}${n.up != null && n.down != null ? `<span class="prate" aria-label="${esc(`${rate(n.up).join(" ")} ${t("up")}, ${rate(n.down).join(" ")} ${t("down")}`)}"><span>↑ ${rate(n.up).join(" ")}</span><span>↓ ${rate(n.down).join(" ")}</span></span>` : ""}</div>`
       : `<div class="small port warnword">${WARN_ICON}${esc(t("link_down", { n: n.name }))}</div>`;
   }).join("")}</div>`;
 }
@@ -270,7 +270,7 @@ ha-card { container-type: inline-size; width: 100%; max-width: var(--nb-max, non
 
 .pico { display: inline-flex; flex: none; }
 .warnword { color: var(--nb-warn); font-weight: 600; }
-.ports { display: grid; gap: 2px; margin-top: 4px; } .port { display: flex; align-items: center; gap: 6px; overflow-wrap: anywhere; } .port .led { flex: none; }
+.ports { display: grid; gap: 2px; margin-top: 4px; } .port { display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; overflow-wrap: anywhere; } .port .led { flex: none; } .prate { display: inline-flex; flex-wrap: wrap; gap: 0 8px; margin-left: auto; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; white-space: nowrap; }
 .tiles { grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); }
 @media (min-width: 620px) {
 .fill ha-card { min-height: var(--nb-fill-h, 0); }
