@@ -4,7 +4,7 @@ A simple Home Assistant card for your TrueNAS server: your drives across the top
 
 ![The NAS Bays card with 12 drive bays, CPU, memory, network, VPN, backups and two pools](images/card.png)
 
-> **Beta (0.4.2).** It runs every day on my own server with TrueNAS 27 RC.1 and Home Assistant 2026.10. It needs TrueNAS 25.10 or newer, but I haven't tried those earlier versions. If you do, please [open an issue](https://github.com/spikey1965/ha-nas-bays/issues) with what works and what doesn't.
+> **Beta (0.4.3).** It runs every day on my own server with TrueNAS 27 RC.1 and Home Assistant 2026.10. It needs TrueNAS 25.10 or newer. 25.10 has been confirmed by a user (the snapshot count isn't available there); I haven't tried the versions in between. If you do, please [open an issue](https://github.com/spikey1965/ha-nas-bays/issues) with what works and what doesn't.
 
 ## What it shows
 
@@ -59,6 +59,7 @@ Everything in the card's visual editor can also be set in YAML.
 | `theme` | `auto` | `light` for dark text, `dark` for white text |
 | `language` | Home Assistant's | `en`, `de`, `fr`, `it`, `es`, `nl`, `pl` or `pt` |
 | `name` | NAS's hostname | The title on the card |
+| `entry` | first NAS by name | Which NAS to show, if you have more than one (see below) |
 | `bays` | `12` | How many bays to show |
 | `slots` | automatic | Drive serials in bay order, using `null` for an empty bay |
 | `hide` | none | Any of `cpu`, `memory`, `network`, `vpn`, `backups`, `storage` |
@@ -75,6 +76,17 @@ Everything in the card's visual editor can also be set in YAML.
 | `background` | theme | A card background colour |
 
 TrueNAS can't tell which physical bay a drive is in, so drives fill the bays in order. To match your case, pick the drive for each bay in the card's editor, using the serial on its label. **Always check the serial on the drive before you pull it.**
+
+## More than one NAS
+
+Add each NAS to the integration, then make one card per NAS. The card's editor shows **Which NAS** when there are two or more.
+
+In YAML, set `entry` to the `nas_bays_entry` attribute of that NAS's Health sensor (Developer Tools → States):
+
+```yaml
+type: custom:nas-bays-card
+entry: 01ABCDEF...
+```
 
 ## Optional: VPN line
 
