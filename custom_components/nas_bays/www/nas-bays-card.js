@@ -1,6 +1,6 @@
 /* NAS Bays card for Home Assistant. Read-only: nothing on this card can change the NAS. MIT licence. */
 (() => {
-const VERSION = "0.4.3";
+const VERSION = "0.4.4";
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
 const fmt = (v, d = 1) => (v == null ? "–" : (+v).toFixed(d));
@@ -47,10 +47,21 @@ function listServers(hass) {
   }
   return [...map.values()];
 }
-/* The NAS this card shows: the one set as entry, else the first by name. */
+/* The NAS this card shows: the one set as entry (its code, or any of its sensors), else the first by name. */
 function pickServer(servers, cfg) {
-  if (cfg.entry) return servers.find((s) => s.entry === cfg.entry) || { name: "NAS", entry: cfg.entry, regs: [] };
+  if (cfg.entry) return servers.find((s) => s.entry === cfg.entry) || servers.find((s) => s.regs.some((r) => r.entity_id === cfg.entry)) || { name: "NAS", entry: cfg.entry, regs: [] };
   return servers.length > 1 ? [...servers].sort((a, b) => a.name.localeCompare(b.name) || String(a.entry).localeCompare(String(b.entry)))[0] : servers[0];
+}
+
+/* Real network ports that are in use, listed only when there are two or more. */
+function portList(nics) {
+  const ports = (nics || []).filter((n) => n.type === "PHYSICAL" && (n.link === "LINK_STATE_UP" || n.configured));
+  if (ports.length < 2) return "";
+  return `<div class="ports">${ports.sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, { numeric: true })).map((n) => {
+    const up = n.link === "LINK_STATE_UP", mb = +(/^(\d+)\s*Mb/.exec(n.media_subtype || "") || [])[1];
+    return up ? `<div class="small port"><span class="led"></span>${esc(n.name)}${mb ? ` · ${mb >= 1000 ? `${mb / 1000} Gb/s` : `${mb} Mb/s`}` : ""}</div>`
+      : `<div class="small port warnword">${WARN_ICON}${esc(t("link_down", { n: n.name }))}</div>`;
+  }).join("")}</div>`;
 }
 
 function readModel(hass, cfg) {
@@ -259,6 +270,7 @@ ha-card { container-type: inline-size; width: 100%; max-width: var(--nb-max, non
 
 .pico { display: inline-flex; flex: none; }
 .warnword { color: var(--nb-warn); font-weight: 600; }
+.ports { display: grid; gap: 2px; margin-top: 4px; } .port { display: flex; align-items: center; gap: 6px; overflow-wrap: anywhere; } .port .led { flex: none; }
 .tiles { grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); }
 @media (min-width: 620px) {
 .fill ha-card { min-height: var(--nb-fill-h, 0); }
@@ -376,7 +388,7 @@ class NasBaysCard extends HTMLElement {
   _full(m) {
     const { cages, internal, unplaced } = this._layout(m);
     this._std = !!cages[0]?.standard;
-    const nic = (m.nics || [])[0] || {}, linkDown = nic.link && nic.link !== "LINK_STATE_UP";
+    const nic = (m.nics || [])[0] || {}, linkDown = nic.link && nic.link !== "LINK_STATE_UP", ports = portList(m.nics);
     const upRate = rate(m.up), downRate = rate(m.down);
     const total = m.memTotal || (m.memApps ?? 0) + (m.memCache ?? 0) + (m.memFree ?? 0) || null;
     const stateClass = m.offline ? "s-off" : `s-${m.state}`;
@@ -409,7 +421,7 @@ class NasBaysCard extends HTMLElement {
         <div class="small">${esc(t("mem_line", { c: fmt(m.memCache), f: fmt(m.memFree), t: fmt(total) }))}</div></div>` : ""}
       ${shown(cfg, "network") ? `<div class="tile"><h3>${esc(t("network"))}${m.netSpeed ? ` · ${m.netSpeed >= 1000 ? `${m.netSpeed / 1000} Gb/s` : `${m.netSpeed} Mb/s`}` : ""}</h3><div class="big">${upRate[0]}<small> ${upRate[1]} ${esc(t("up"))}</small></div>
         <div class="big nsecond">${downRate[0]}<small> ${downRate[1]} ${esc(t("down"))}</small></div>
-        ${linkDown ? `<div class="small warnword">${esc(t("link_down", { n: nic.name }))}</div>` : ""}</div>` : ""}
+        ${ports || (linkDown ? `<div class="small warnword">${esc(t("link_down", { n: nic.name }))}</div>` : "")}</div>` : ""}
     </div>
     ${lines ? `<div class="slines">${lines}</div>` : ""}
     ${shown(cfg, "storage") ? `<div class="pools" aria-label="${esc(t("storage"))}">${Object.values(m.pools).map((p) => poolTile(p, cfg)).join("")}</div>` : ""}`;

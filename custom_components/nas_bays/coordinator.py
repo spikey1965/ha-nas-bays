@@ -38,6 +38,9 @@ def interface_list(query: list[dict] | None, live: dict[str, dict]) -> list[dict
         addresses = [a for a in state.get("aliases") or [] if a.get("type") in ("INET", "INET6")]
         nics.append({
             "name": nic.get("name"),
+            "type": nic.get("type"),
+            # set up in TrueNAS: an unplugged spare port isn't worth a warning
+            "configured": bool(addresses or nic.get("aliases") or nic.get("ipv4_dhcp") or nic.get("ipv6_auto")),
             "link": (live.get(nic.get("name")) or {}).get("link_state") or state.get("link_state"),
             "media_type": state.get("active_media_type"),
             "media_subtype": state.get("active_media_subtype"),

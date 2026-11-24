@@ -4,7 +4,7 @@ A simple Home Assistant card for your TrueNAS server: your drives across the top
 
 ![The NAS Bays card with 12 drive bays, CPU, memory, network, VPN, backups and two pools](images/card.png)
 
-> **Beta (0.4.3).** It runs every day on my own server with TrueNAS 27 RC.1 and Home Assistant 2026.10. It needs TrueNAS 25.10 or newer. 25.10 has been confirmed by a user (the snapshot count isn't available there); I haven't tried the versions in between. If you do, please [open an issue](https://github.com/spikey1965/ha-nas-bays/issues) with what works and what doesn't.
+> **Beta (0.4.4).** It runs every day on my own server with TrueNAS 27 RC.1 and Home Assistant 2026.10. It needs TrueNAS 25.10 or newer. 25.10 has been confirmed by a user (the snapshot count isn't available there); I haven't tried the versions in between. If you do, please [open an issue](https://github.com/spikey1965/ha-nas-bays/issues) with what works and what doesn't.
 
 ## What it shows
 
@@ -81,11 +81,11 @@ TrueNAS can't tell which physical bay a drive is in, so drives fill the bays in 
 
 Add each NAS to the integration, then make one card per NAS. The card's editor shows **Which NAS** when there are two or more.
 
-In YAML, set `entry` to the `nas_bays_entry` attribute of that NAS's Health sensor (Developer Tools → States):
+In YAML, set `entry` to any of that NAS's sensors, such as its Health sensor, or to the `nas_bays_entry` attribute shown on them (Developer Tools → States):
 
 ```yaml
 type: custom:nas-bays-card
-entry: 01ABCDEF...
+entry: sensor.my_nas_health
 ```
 
 ## Optional: VPN line
